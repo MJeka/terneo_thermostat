@@ -1,5 +1,7 @@
 # Terneo Thermostat Integration for Home Assistant
 
+English | [Русский](README.ru.md)
+
 <img width="2000" height="334" alt="4c8grq59fdbxs708khd8hru46i0iqvxv" src="https://github.com/user-attachments/assets/fecdffe1-d71b-4e64-84e9-54028a8cd8b5" /> 
 
 Custom component for Home Assistant to control Terneo thermostats via local API.
