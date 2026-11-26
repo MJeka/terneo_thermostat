@@ -3,7 +3,7 @@
     "step": {
       "user": {
         "title": "Connect to Terneo Thermostat",
-        "description": "Enter the connection details for your Terneo/Welrok thermostat.",
+        "description": "Enter the connection details for your Terneo thermostat.",
         "data": {
           "host": "IP Address",
           "serial": "Serial Number"

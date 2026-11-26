@@ -1,21 +1,25 @@
-# Terneo/Welrok Thermostat Integration for Home Assistant
+# Terneo Thermostat Integration for Home Assistant
 
 <img width="2000" height="334" alt="4c8grq59fdbxs708khd8hru46i0iqvxv" src="https://github.com/user-attachments/assets/fecdffe1-d71b-4e64-84e9-54028a8cd8b5" /> 
 
-<img width="725" height="135" alt="logotipwelrokgoluboj" src="https://github.com/user-attachments/assets/18102fa7-717f-4e65-a940-4ebd2f64ba84" />
-
-
-
-Custom component for Home Assistant to control Terneo/Welrok thermostats via local API.
+Custom component for Home Assistant to control Terneo thermostats via local API.
 
 ## Supported Devices
 
-This integration supports both old and new versions of Welrok/Terneo thermostats:
+This integration supports both old and new versions of Terneo thermostats:
 
 - **Old version (OZ without air sensor)** - devices manufactured before June 2025
 - **New version (OZ with air sensor / AZ)** - devices manufactured from June 2025
 
 The integration automatically detects the device version during setup and, from v1.1.0, uses the actual parameter set returned by `cmd:1` to expose only capabilities supported by that thermostat/firmware.
+
+## Changelog
+
+### 1.1.1
+
+- Fixed local API polling on firmware revisions that require `time` and `auth` fields even when LAN/cloud locks are disabled.
+- Read requests now use compact JSON to avoid empty responses from the embedded API.
+- Added a read-only diagnostic probe under `tools/` for HTTP, MQTT and UDP broadcast checks.
 
 ## Features
 
@@ -134,17 +138,17 @@ Full parameter data (`cmd:1`) is refreshed separately every 120 seconds to reduc
 
 ## API Documentation
 
-This integration uses the Welrok Local API:
+This integration uses the Terneo Local API:
 
-- [New version (OZ with air sensor)](https://welrok-local-api.readthedocs.io/en/latest/OZ/en/parameters.html)
-- [Old version (OZ without air sensor)](https://welrok-local-api.readthedocs.io/en/latest/Old/en/parameters.html)
+- [API reference](https://terneo-api.readthedocs.io/)
+- [Parameters](https://terneo-api.readthedocs.io/parameters.html)
+- [Commands](https://terneo-api.readthedocs.io/commands.html)
 
 ### Security Note
 
 By default, local API control without a security token is blocked on the device for security reasons. To enable local control, set the `bLc` parameter to `oFF` on your thermostat.
 
-- [New version (OZ with air sensor)](https://welrok-local-api.readthedocs.io/en/latest/OZ/en/safety.html)
-- [Old version (OZ without air sensor)](https://welrok-local-api.readthedocs.io/en/latest/Old/en/safety.html)
+- [Safety](https://terneo-api.readthedocs.io/safety.html)
 
 ## Parameters Supported
 
@@ -185,6 +189,18 @@ By default, local API control without a security token is blocked on the device 
 ### Commands not working
 - Check if `lanBlock` (parameter 114) is disabled
 - Ensure the device is not in cloud-only mode
+
+### Read-only API probe
+
+`tools/probe_terneo.py` is a diagnostic helper. It compares the legacy request payload with the `time`/`auth` payload, can subscribe to MQTT telemetry and can listen for UDP announcements. It never publishes messages or changes device settings. Secrets are read from environment variables (`TERNEO_TOTP_KEY`, `TERNEO_MQTT_HOST`, `TERNEO_MQTT_PORT`, `TERNEO_MQTT_USER`, `TERNEO_MQTT_PASS`) and are never printed.
+
+```bash
+python3 tools/probe_terneo.py --mode http --host <IP> --sn <SERIAL> --cmd 4
+python3 tools/probe_terneo.py --mode mqtt --mqtt-topic 'pub_terneo/+/get/#'
+python3 tools/probe_terneo.py --mode broadcast --seconds 10
+```
+
+Run `python3 tools/probe_terneo.py --help` for all options. The script reports missing arguments or environment variables and shows the exact command to rerun.
 
 ## Contributing
 

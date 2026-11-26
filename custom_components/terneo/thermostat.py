@@ -1,4 +1,5 @@
-"""Terneo/Welrok Thermostat API client."""
+"""Terneo Thermostat API client."""
+import json
 import logging
 import time
 from typing import Any
@@ -27,7 +28,7 @@ _LOGGER = logging.getLogger(__name__)
 
 class TerneoThermostat:
     """
-    A class for interacting with the Terneo/Welrok Thermostat's HTTP API.
+    A class for interacting with the Terneo Thermostat's HTTP API.
     
     Supports both old (before June 2025) and new (from June 2025) versions.
     
@@ -110,6 +111,20 @@ class TerneoThermostat:
         """Get the full URL for an endpoint."""
         return self._base_url.format(endpoint=endpoint)
 
+    def _read_payload(self, cmd: int) -> dict:
+        """Build a read request accepted by every known Terneo firmware.
+
+        Some revisions reject read commands that omit the TOTP fields, even
+        when the LAN/cloud locks are disabled. For read-only polling the
+        device accepts a dummy nine-digit token; writes are left unchanged.
+        """
+        return {
+            "cmd": cmd,  # keep first: older parsers expect it here
+            "sn": self.sn,
+            "time": str(int(time.time()) - 946684800),  # seconds since 2000-01-01
+            "auth": "000000000",  # dummy token; reads need no real TOTP key
+        }
+
     def _post(
         self,
         endpoint: str = "api",
@@ -124,8 +139,14 @@ class TerneoThermostat:
         is handled by ``get_status``. Idempotent write requests are retried once;
         non-idempotent commands such as restart explicitly use no retry.
         """
-        request_data = kwargs.get("json", {})
+        request_data = kwargs.pop("json", {})
         attempts = max(1, retries + 1)
+
+        # The embedded API is whitespace-sensitive: requests' default JSON
+        # separators make some firmware revisions return empty responses.
+        raw_body = json.dumps(request_data, separators=(",", ":")).encode("utf-8")
+        kwargs["data"] = raw_body
+        kwargs.setdefault("headers", {"Content-Type": "application/json"})
 
         for attempt in range(1, attempts + 1):
             # Terneo local API is sensitive to requests sent back-to-back.
@@ -218,7 +239,7 @@ class TerneoThermostat:
         """
         self._last_parameters_attempt = time.monotonic()
         result = self._post(
-            json={"cmd": CMD_GET_PARAMS, "sn": self.sn},
+            json=self._read_payload(CMD_GET_PARAMS),
             retries=REQUEST_RETRIES,
             warn_on_failure=False,
         )
@@ -272,7 +293,7 @@ class TerneoThermostat:
     def get_status(self) -> dict | bool:
         """Get the status dictionary from the thermostat with one retry."""
         result = self._post(
-            json={"cmd": CMD_GET_STATUS, "sn": self.sn},
+            json=self._read_payload(CMD_GET_STATUS),
             retries=REQUEST_RETRIES,
             warn_on_failure=False,
         )

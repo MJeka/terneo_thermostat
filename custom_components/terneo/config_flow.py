@@ -1,4 +1,4 @@
-"""Config flow for Terneo/Welrok thermostat integration."""
+"""Config flow for Terneo thermostat integration."""
 from __future__ import annotations
 
 import logging

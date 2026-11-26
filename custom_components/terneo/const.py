@@ -1,8 +1,8 @@
-"""Constants for Terneo/Welrok thermostat integration."""
+"""Constants for Terneo thermostat integration."""
 from enum import IntEnum
 
 DOMAIN = "terneo"
-MANUFACTURER = "Welrok/Terneo"
+MANUFACTURER = "Terneo"
 
 # Configuration keys
 CONF_SERIAL = "serial"
