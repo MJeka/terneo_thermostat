@@ -1,4 +1,4 @@
-"""Select platform for Terneo/Welrok thermostat."""
+"""Select platform for Terneo thermostat."""
 from __future__ import annotations
 
 import logging

@@ -1,4 +1,4 @@
-"""Binary sensor platform for Terneo/Welrok thermostat diagnostics."""
+"""Binary sensor platform for Terneo thermostat diagnostics."""
 from __future__ import annotations
 
 from dataclasses import dataclass
